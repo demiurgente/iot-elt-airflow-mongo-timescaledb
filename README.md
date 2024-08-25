@@ -39,11 +39,11 @@ To run main ETL job:
 - turn on ETL dependency job dags
     - `iot_raw_extract`
     - `iot_stage_transform`
-- turn in master dag to orchestrate pipeline
+- turn on master dag to orchestrate pipeline
     - `iot_master_dag`
 - explore results in `raw`/`stage` schemas in TimescaleDB using **DBeaver**
 
-To run aggregate jobs (after main dag has completed):
+To run aggregate jobs (after master dag has completed):
 - turn on any of the desired:
     - `iot_agg_transform_daily`
     - `iot_agg_transform_weekly`
