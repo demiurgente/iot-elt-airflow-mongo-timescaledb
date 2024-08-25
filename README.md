@@ -30,6 +30,27 @@ The usual:
 docker-compose up
 ```
 
+When services are launched:
+- navigate to [Airflow UI](https://localhost:8081)
+- login with default credentials (airflow/airflow)
+- explore each DAG's docs in UI
+
+To run main ETL job:
+- turn on ETL dependency job dags
+    - `iot_raw_extract`
+    - `iot_stage_transform`
+- turn in master dag to orchestrate pipeline
+    - `iot_master_dag`
+- explore results in `raw`/`stage` schemas in TimescaleDB using **DBeaver**
+
+To run aggregate jobs (after main dag has completed):
+- turn on any of the desired:
+    - `iot_agg_transform_daily`
+    - `iot_agg_transform_weekly`
+    - `iot_agg_transform_monthly`
+- explore results in `agg` schema in TimescaleDB using **DBeaver**
+
+
 ## Data Processing Strategy
 
 In my opinion data processing strategy should come from business needs and offer a "good-enough" solution that can sustain current business requirements by delivering more value than creating trouble. By trouble, I mean developer experience, unexpected bottlenecks, and runtime errors for service-critical APIs. Even though, we cannot predict absolutely everything - we should focus on common pitfalls that arise during the design of ETL pipelines, as well as to take time to evaluate potential business-related risks. Focus on tools that offer long-term scaling, transparent software that can be quickly configured, processing that can scale in the future when data grows bigger, and deliver sustainable, predictable SLAs.
