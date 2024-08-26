@@ -76,3 +76,7 @@ Current orchestration setup and monitoring tools are essential for process recov
 - wait 15 minutes and trigger a sync job that would extract `raw` documents from all **MongoDB** collections and load them to DWH **Timescaledb**
 - sensor checks previous job completion and launches `stage` job that normalizes data
 - schedule `daily/weekly/monthly` jobs to aggregate data in `agg` schema for health metrics that need bigger scale
+
+## Streaming Architecture Considerations
+
+Due to time constraints I had to focus on the DWH architecture and pipeplines for this project, however, the IOT device data delivery is an interesting project too. Recently I have completed a Rust-based streaming [application](https://github.com/lithiferous/kstream-agg-rs) that would compute agreggation on the fly using **Kafka**, to use it for this project it would require some adjustments to stream data to our **MongoDB**, however, or showcases rich ecosystem including schema management, intermediate sink, producer/consumer jobs. As an option we could also consider **Spark-streaming**, **NiFi**, **Flink** or **Memphis.dev** to accomplish continuously updated source database sink which offer flexible APIs to perform window-based transformations and control data quality, schema changes on the go.
