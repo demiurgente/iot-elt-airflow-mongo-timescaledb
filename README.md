@@ -6,7 +6,7 @@ The idea for this project is to create a system that can provide analytics on th
 
 ![Pipeline Architecture Diagram](./resources/solution_architecture.png)
 
-In order to perform scheduling data processing I chose **Airflow** as a default data engineering tool to orchestrate ETL processes. It can be easily deployed on **K8s** to facilitate scaling and offers enough flexibility to design ETL of any complexity.
+To schedule data processing I chose **Airflow** as a default data engineering tool to orchestrate ETL processes. It can be easily deployed on **K8s** to facilitate scaling and offers enough flexibility to design ETL of any complexity.
 
 For data transformations, I decided to use **dlt** - a modern tool for non-structured data that offers an abstraction to generate schema for source/destination data and automates ELT tasks to map collections from the source to a target database without maintaining database interfaces (i.e. JDBC, airflow operators) through code-generation only. After the data is uploaded to target DWH in the form of raw data sources we can process it using **dbt**; a modern tool that executes SQL code across a wide variety of databases allows to generate code using templates, and offers other utility tools to define SQL tables, schemas and configure their materialization. In other terms, write less code, reuse common expressions, and have a database-agnostic connector.
 
