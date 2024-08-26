@@ -31,25 +31,46 @@ docker-compose up
 ```
 
 When services are launched:
+
 - navigate to [Airflow UI](https://localhost:8080)
 - login with default credentials (`airflow` for both)
 - explore each DAG's docs in UI
 
 To run main ETL job:
+
 - turn on ETL dependency job dags
-    - `iot_raw_extract`
-    - `iot_stage_transform`
+  - `iot_raw_extract`
+  - `iot_stage_transform`
 - turn on master dag to orchestrate pipeline
-    - `iot_master_dag`
+  - `iot_master_dag`
 - explore results in `raw`/`stage` schemas in TimescaleDB using **DBeaver**
 
 To run aggregate jobs (after master dag has completed):
+
 - turn on any of the desired:
-    - `iot_agg_transform_daily`
-    - `iot_agg_transform_weekly`
-    - `iot_agg_transform_monthly`
+  - `iot_agg_transform_daily`
+  - `iot_agg_transform_weekly`
+  - `iot_agg_transform_monthly`
 - explore results in `agg` schema in TimescaleDB using **DBeaver**
 
+## Data Analytics Query Examples
+
+DWH offers ELT to prepare daily/monthly/weekly aggregates and factual dimensions (users/devices) to streamline analytics and quickly build processing software using similar architecture. Some query examples showcase how to build health insights starting with `stage` and `agg` layers.
+
+Aggregated data across users to find average health metrics for different age groups ([monthly query file](./dags/dbt_project/models/examples/monthly_health_metrics_per_age_grp.sql)), where:
+
+- _`avg_sleep_bpm`_ represents heart beats per minute during sleep
+- _`age_group`_ an age bucket to compare monthly health metrics
+- _`avg_step_count`_ average total monthly steps achieved by the group
+
+![Age query results](./resources/monthly_health_metrics_per_age_grp.png)
+
+User's daily steps summary for the past month ([query](./dags/dbt_project/models/examples/daily_user_steps_for_last_month.sql) with generated date filter rendered before execution)
+
+- _`devices`_ showcases all smart watch/phone ids associated with a user
+- _`step_count`_ total steps each day to pre-compute data for quicker analysis
+
+![Step query results](./resources/daily_user_steps_for_last_month.png)
 
 ## Data Processing Strategy
 
@@ -63,7 +84,7 @@ In my opinion data processing strategy should come from business needs and offer
 
 Data processing optimization was to filter data by specific dates because even after splitting IOT files into tables timestamp data across multiple devised per user grows quickly and once we have received too much data our processing unit will not be able to handle it in memory and terminate. To address this issue we should be sure that a specified period will always be good to go both for the database and our SQL queries. To achieve that we have to identify a desired level of granularity.
 
-Currently system supports the following process: if the run is initial - it will retrieve all historical data from the database and launch process/aggregation tasks in a single run. The following runs will ALWAYS use a filter to retrieve records that exceed the execution date from the previous run and process them by rendering a __WHERE__ clause filter for each SQL model that would lookup latest existing date on table and run filter i.e. `WHERE day = '20200101'`. The project offers enough tools to design a historical backfill task that would split the upload into days/months/years, but the initial idea was to create an orchestrator that would be deployed to support a database from the start and collect data in sequence.
+Currently system supports the following process: if the run is initial - it will retrieve all historical data from the database and launch process/aggregation tasks in a single run. The following runs will ALWAYS use a filter to retrieve records that exceed the execution date from the previous run and process them by rendering a **WHERE** clause filter for each SQL model that would lookup latest existing date on table and run filter i.e. `WHERE day = '20200101'`. The project offers enough tools to design a historical backfill task that would split the upload into days/months/years, but the initial idea was to create an orchestrator that would be deployed to support a database from the start and collect data in sequence.
 
 ## Orchestration Setup
 

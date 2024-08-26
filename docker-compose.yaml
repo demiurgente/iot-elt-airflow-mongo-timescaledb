@@ -67,7 +67,7 @@ services:
     <<: *airflow-common
     command: webserver
     ports:
-      - "8080:8080"
+      - 8080:8080
     networks:
       - airflow-network
       - mongodb-network
@@ -280,7 +280,7 @@ services:
       MONGO_EXPRESS_USERNAME: ${MONGO_USER:-admin}
       MONGO_EXPRESS_PASSWORD: ${MONGO_PWD:-password}
     ports:
-      - "27017:27017"
+      - 27017:27017
     networks:
       - airflow-network
       - mongodb-network
@@ -316,7 +316,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     volumes:
       - timescaledb-volume:/var/lib/postgresql/data
-
+ 
 volumes:
   postgres-db-volume:
   timescaledb-volume:

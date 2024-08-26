@@ -16,12 +16,12 @@ WITH user_age_grps AS (
 )
 
 SELECT
-    "day",
+    "month",
 		u.age_group,
     AVG(ds.avg_sleep_bpm) AS avg_sleep_bpm,
     AVG(ds.step_count) AS avg_step_count
-FROM agg.daily_summary ds
+FROM agg.monthly_summary ds
 JOIN user_age_grps u
   ON ds.device_id = ANY(u.devices)
-GROUP BY "day", u.age_group
-ORDER BY "day" DESC, "age_group" DESC
+GROUP BY "month", u.age_group
+ORDER BY "month" DESC, "age_group" DESC

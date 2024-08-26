@@ -8,7 +8,7 @@ import requests, zipfile, io
 
 
 OSFM_URI = "https://datasets.simula.no/downloads/pmdata.zip"
-cut_off_date = "19700101"
+cut_off_date = "20200101"
 bucket_interval = "4h"
 r = requests.get(OSFM_URI)
 z = zipfile.ZipFile(io.BytesIO(r.content))
@@ -42,7 +42,7 @@ def process_records():
                 'confidence': x[2]
                 } for x in g.values.tolist()])
         hr = hr.reset_index()
-        hr = hr[pd.to_datetime(hr.dt_key) >= cut_off_date]
+        hr = hr[pd.to_datetime(hr.dt_key) <= cut_off_date]
         print("hr")
         hr.rename({0:"metrics","dt_key":"created_at"},inplace=True,axis=1)
         hr['ended_at'] = hr.created_at + pd.Timedelta(bucket_interval)
@@ -56,7 +56,7 @@ def process_records():
         sp["sleepStartTs"] = pd.to_datetime(sp.sleepStartTs)
         sp["sleepEndTs"] = pd.to_datetime(sp.sleepEndTs)
         sp['dt_key'] = sp['sleepEndTs']
-        sp = sp[pd.to_datetime(sp.dt_key) >= cut_off_date]
+        sp = sp[pd.to_datetime(sp.dt_key) <= cut_off_date]
         print("sp")
         sp = sp \
             .groupby(sp.dt_key.dt.floor(bucket_interval)) \
@@ -73,7 +73,7 @@ def process_records():
         sleeps.append(sp)
         st =  pd.read_json(f"{get_dir(p)}steps.json")
         st['dt_key']=st.dateTime
-        st = st[pd.to_datetime(st.dt_key) >= cut_off_date]
+        st = st[pd.to_datetime(st.dt_key) <= cut_off_date]
         print("st")
         st = st \
             .groupby(st.dt_key.dt.floor(bucket_interval)) \
@@ -99,7 +99,7 @@ df=  df[['Age', 'Height', 'Gender']]
 df.columns = ['age','height','gender']
 df['user_id'] = [uuid.uuid4().hex for x in participants]
 df['created_at'] = datetime.date(2019, 11, 1)
-df['devices'] = pd.Series([[x] for x in users])
+df['devices'] = pd.Series([[x] for x in devices])
 df['email'] = pd.Series([
     "sam.smith@gmail.com",
     "alfred.boo@gmail.com",

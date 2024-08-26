@@ -1,18 +1,6 @@
 version: 2
 
 sources:
-  - name: stage
-    quoting:
-      database: false
-      schema: false
-      identifier: false
-    loader: stitch
-    tables:
-      - name: heart_rates
-      - name: sleeps
-      - name: steps
-      - name: users
-
   - name: raw
     quoting:
       database: false
@@ -28,3 +16,32 @@ sources:
       - name: steps__metrics
       - name: users
       - name: users__devices
+
+  - name: stage
+    quoting:
+      database: false
+      schema: false
+      identifier: false
+    loader: stitch
+    tables:
+      - name: heart_rates
+      - name: sleeps
+      - name: steps
+      - name: users
+
+  - name: agg
+    quoting:
+      database: false
+      schema: false
+      identifier: false
+    loader: stitch
+    tables:
+      - name: daily_sleeps
+      - name: daily_steps
+      - name: daily_summary
+      - name: monthly_sleeps
+      - name: monthly_steps
+      - name: monthly_summary
+      - name: weekly_sleeps
+      - name: weekly_steps
+      - name: weekly_summary

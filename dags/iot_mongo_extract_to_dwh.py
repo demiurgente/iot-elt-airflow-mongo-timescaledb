@@ -4,7 +4,14 @@
 DAG kicks off dlt pipeline to extract source collections
 from MongoDB, ingest them to Timescaledb `raw` schema. More
 on how nested documents are extracted:
-https://dlthub.com/docs/examples/nested_data
+- https://dlthub.com/docs/examples/nested_data
+
+Level of parallelism is set in global `.env` variables.
+Current setup needs tweaking to achieve better performance
+for bulk uploads of historical data. To tune the performance
+for extraction/loading refer to:
+- https://dlthub.com/docs/reference/performance#extract
+- https://dlthub.com/docs/reference/performance#load
 
 Purpose of this DAG is to maintain source data retrieved
 in batches and perform ELT during small intervals (15 min).

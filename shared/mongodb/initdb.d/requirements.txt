@@ -1,2 +1,4 @@
+openpyxl
 pandas
+requests
 numpy
