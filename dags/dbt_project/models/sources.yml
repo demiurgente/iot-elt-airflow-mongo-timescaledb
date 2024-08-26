@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: stage
+    quoting:
+      database: false
+      schema: false
+      identifier: false
+    loader: stitch
+    tables:
+      - name: heart_rates
+      - name: sleeps
+      - name: steps
+      - name: users
+
+  - name: raw
+    quoting:
+      database: false
+      schema: false
+      identifier: false
+    loader: stitch
+    tables:
+      - name: heart_rates
+      - name: heart_rates__metrics
+      - name: sleeps
+      - name: sleeps__metrics
+      - name: steps
+      - name: steps__metrics
+      - name: users
+      - name: users__devices
