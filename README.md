@@ -31,7 +31,7 @@ docker-compose up
 ```
 
 When services are launched:
-- navigate to [Airflow UI](https://localhost:8081)
+- navigate to [Airflow UI](https://localhost:8080)
 - login with default credentials (`airflow` for both)
 - explore each DAG's docs in UI
 
