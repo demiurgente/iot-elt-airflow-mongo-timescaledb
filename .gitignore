@@ -1,0 +1,9 @@
+!logs/scheduler/
+logs/scheduler/*
+logs/
+dags/__pycache__/
+dags/dlt_sources/**/__pycache__/
+dags/dlt_sources/.dlt/secrets.toml
+dags/dbt_project/target/
+dags/dbt_project/dbt_packages/
+dags/dbt_project/logs/

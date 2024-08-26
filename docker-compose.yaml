@@ -29,9 +29,9 @@ x-airflow-common:
       condition: service_healthy
 
 services:
-  ##########################################################
-  # Airflow Setup
-  ##########################################################
+##########################################################
+# Airflow Setup
+##########################################################
   postgres:
     image: postgres:13
     environment:
@@ -257,9 +257,9 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  ############################################################
-  # Data Storage Services (source db: mongo, DWH: Timescaledb)
-  ############################################################
+############################################################
+# Data Storage Services (source db: mongo, DWH: Timescaledb)
+############################################################
 
   mongo:
     image: mongo:latest
