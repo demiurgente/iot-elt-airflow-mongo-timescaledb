@@ -98,6 +98,42 @@ Current orchestration setup and monitoring tools are essential for process recov
 - sensor checks previous job completion and launches `stage` job that normalizes data
 - schedule `daily/weekly/monthly` jobs to aggregate data in `agg` schema for health metrics that need bigger scale
 
-## Streaming Architecture Considerations
+### Transformation layer
+
+Currently transformation layer is focused around **dbt** tool that translates SQL code to supported DWH adapter (in our case **Timescaledb**), therefore, upon ingesting `raw` data into the database - the normalisation, aggregation, and following transformations are delivered by explicit queries to the DWH. The reason behind choosing this approach was mainly due to overhead in development/execution time associated with **Flink**, and **Spark** solutions, sometimes spinning up a separate **K8s** cluster is excessive; Our project focused on the POC solution that glances over possible architectural approach rather than big data oriented custom solution (it is quite easy to convert existing **dbt** pipelines into **Spark** jobs), but for the most part data ingested into the DWH should not exceed hundred-gigabyte threshold because current pipelines are oriented to schedule bucket transformation every 30 minutes (short timespan) and consequently have a fairly low impact on DWH performance by filtering data to a single day ingestion limit. Moreover, it is convenient to start with a more simple analytical application and add processing complexity once it is required by business needs rather than doing premature optimization that would complicate both developer's experience and project management SLAs.
+
+### Scalability
+
+IoT data processing complexity grows quite quickly, therefore, one of the considerations was to use tools that streamline scaling IO/ELT jobs. The pipeline can be divided into two subsections, which should be scaled independently due to the nature of isolated infrastructure.
+
+#### Extract
+
+The extraction step occurs whenever we want to retrieve `raw` sources from **MongoDB** that stores IOT device level data and push normalized data to `dwh.raw` schema to our **Timescaledb** DWH. By default, we use **dlt** tool to automate each part of the process for every existing document collection, since we also need to scale the process at some point - we have to consider what **dlt** offers out of the box. Depending on the nature of the data we could either work with a multitude of small documents or a big unionized collection of a single document, in advance it is impossible to know such details, but [documentation](https://dlthub.com/docs/reference/performance) offers enough information on how to adjust resources, so that our **Airflow** worker (**Celery**) would be able to scale the ELT across cores/threads effectively. The current configuration declared in `.env` uses:
+
+- 5 cores to extract documents from **MongoDB** collections
+
+```
+SOURCES__MONGODB__EXTRACT__WORKERS=5
+```
+
+- 20 threads to ingest `raw` data to **Timescaledb** DWH
+
+```bash
+DESTINATION__POSTGRES__LOAD__WORKERS=20
+```
+
+While the extraction job itself is defined in the following **Airflow** [dag](./dags/iot_mongo_extract_to_dwh.py).
+
+#### Transform
+
+Refers to all steps in the pipeline after initial `raw` sources were pushed to DWH `dwh.raw` schema, and are now available for general queries using JDBC driver. Tool **dbt** can be seen as a database-agnostic interface that would execute SQL query on our DWH, as such it does not scale on its own, it just translates existing code from templates in [models](./dags/dbt_project/models/) to runtime code for the database.
+
+Therefore, the approach to scale the transform layer would be to figure out sufficient resources based on the expected data growth/analytical query load and adjust it either in an on-premise or cloud solution, so that it could withstand both throughput daily IO from ETL pipeline, and new development resources required by the analytical team. Then **dbt** would continue to render and execute needed SQL models to keep the DWH updated for production use.
+
+#### Approach clarification
+
+Both options are not ideal but are rather convenient starting places where the information is not clear since SQL code could be migrated to **ClickHouse**, and **SparkSQL** without too much development overhead, but the main advantage is that the pipeline can be treated as a black box and could scale on its own by providing more resources and tweaking environment variables to scale the processing automatically without memorizing partitioning/software architecture. In short infrastructure capacity is the means of scaling ELT/transformation stages which decouples and isolates the complexity associated with parallelization for POC jobs until we are required to modify the system due to new information related to domain-specific data/project requirements.
+
+### Streaming Architecture Considerations
 
 Due to time constraints I had to focus on the DWH architecture and pipeplines for this project, however, the IOT device data delivery is an interesting project too. Recently I have completed a Rust-based streaming [application](https://github.com/lithiferous/kstream-agg-rs) that would compute agreggation on the fly using **Kafka**, to use it for this project it would require some adjustments to stream data to our **MongoDB**, however, or showcases rich ecosystem including schema management, intermediate sink, producer/consumer jobs. As an option we could also consider **Spark-streaming**, **NiFi**, **Flink** or **Memphis.dev** to accomplish continuously updated source database sink which offer flexible APIs to perform window-based transformations and control data quality, schema changes on the go.
