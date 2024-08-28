@@ -78,7 +78,31 @@ In my opinion data processing strategy should come from business needs and offer
 
 #### IOT Fitbit data format
 
-**Fitbit** files represent an aggregated view over health events collected by device that occurred in a given timeframe; it includes, but is not limited to: `sleeps` (duration, levels for the health inquiry), `steps` (step count, sometimes gyroscope coordinates), `heart_rates` (beats per minute, confidence), `users` (device holder description details). [Script](./shared/mongodb/initdb.d/generator.py) for generating data, and [folder](./shared/mongodb/initdb.d/data/) with samples that were used to perform ETL in this project was taken from a public dataset [PMData](https://datasets.simula.no/pmdata/) that retrospectively analyzed health metrics for 16 participants using IOT data.
+**Fitbit** files represent an aggregated view over health events collected by device that occurred in a given timeframe; it includes, but is not limited to: `sleeps` (duration, levels for the health inquiry), `steps` (step count, sometimes gyroscope coordinates), `heart_rates` (beats per minute, confidence), `users` (device holder description details). [Script](./shared/mongodb/initdb.d/generator.py) for generating data, and [folder](./shared/mongodb/initdb.d/data/) with samples that were used to perform ETL in this project was taken from a public dataset [PMData](https://datasets.simula.no/pmdata/) that retrospectively analyzed health metrics for 16 participants using IOT data. Source data used in this project can be divided into timeseries tables (`heart_rates`, `sleeps`, `steps`) and fact table that show IoT user information (`users`).
+
+Table `users` contains info relevant to device holders to be used for marketing, real-time alerts and demographic research, source file for **MongoDB** is declared as [JSON](./shared/mongodb/initdb.d/data/users.json). The table has the following fields:
+
+| age | height | gender | user_id  | created_at | devices      | email               | dob       |
+| --- | ------ | ------ | -------- | ---------- | ------------ | ------------------- | --------- |
+| 48  | 195    | male   | 02933... | 1572566400 | [cc05138...] | sam.smith@gmail.com | 209865600 |
+
+Source file `heart_rates.json` contains information relevant to heart metrics that is aggregated each 4 hours. It is common to bucket IoT data to time periods of specified length (15m, 1h or 4h) to group batches for a more performant processing/insertion downstream (more info on why it works can be found in **MongoDB** [article](https://www.mongodb.com/docs/manual/tutorial/model-iot-data/)) as follows (unix timestamp is replaced by readable date string):
+| device_id | created_at | ended_at | metrics |
+| --- | --- | --- | --- |
+| cc05138... | 2020/02/01 02:00 | 2020/02/01 06:00 | [{"ts":2020/02/01 02:00:18, "bpm":53, "confidence":3},...] |
+| cc05138... | 2020/02/01 06:00 | 2020/02/01 10:00 | [{"ts":2020/02/01 06:00:12, "bpm":64, "confidence":3},...] |
+
+`Sleeps` metrics in corresponding [json](./shared/mongodb/initdb.d/data/sleeps.json) showscase when IoT device detected sleeping cycle and total sleep duration. It is used later on to detect average bpm during sleep to compare across age groups. Similarly data is grouped by time buckets, where duration is expressed in milliseconds (`22560000/3600000=~6.27h`), while the record itself is recorded after the whole sleeping cycle has elapsed (we know start/end timestamp of the sleep) and `created_at`/`ended_at` are offsets to capture `end_ts` that refers to the end of the sleeping cycle. It has the following outlay:
+
+| device_id  | created_at          | ended_at            | metrics                                                                                  |
+| ---------- | ------------------- | ------------------- | ---------------------------------------------------------------------------------------- |
+| cc05138... | 2020/02/01 08:15:00 | 2020/02/01 08:30:00 | [{"start_ts": 2020/02/01 02:02:30, "end_ts": 2020/02/01 08:19:00, "duration": 22560000}] |
+
+Finally, `steps` raw input files record steps that occurred for a particular timestamp that we can aggregate later to capture daily/monthly activity for the given user's device. The table is also aggregated during specific period of 15 minutes and has the following structure:
+
+| device_id  | created_at          | ended_at            | metrics                                                                                                                     |
+| ---------- | ------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| cc05138... | 2020/03/08 18:00:00 | 2020/03/08 18:15:00 | [{"ts": 2020/03/08 18:01:00, "steps": 0},{"ts": 2020/03/08 18:02:00, "steps": 16},{"ts": 2020/03/08 18:03:00, "steps": 26}] |
 
 #### Incremental run
 
